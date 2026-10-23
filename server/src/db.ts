@@ -11,7 +11,8 @@ export interface Db {
 pg.types.setTypeParser(pg.types.builtins.DATE, (v) => v);
 
 export function createPgDb(connectionString: string): Db & { end(): Promise<void> } {
-  const pool = new pg.Pool({ connectionString });
+  // Serverless (Vercel) runs many short-lived copies: keep each one's share of connections small.
+  const pool = new pg.Pool({ connectionString, max: process.env.VERCEL ? 3 : 10 });
   return {
     query: (text, params) => pool.query(text, params as any[]) as Promise<{ rows: any[] }>,
     exec: (sql) => pool.query(sql),

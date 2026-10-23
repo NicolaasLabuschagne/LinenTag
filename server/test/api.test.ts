@@ -302,7 +302,10 @@ describe('items, tags, sets, scanning', () => {
     expect(pillow.status).toBe(201);
     // No purchase date given: it's the day the item was added.
     expect(pillow.body.item.purchaseDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(pillow.body.item.purchaseDate).toBe(pillow.body.item.createdAt.slice(0, 10));
+    // "Today" is the database's local date, which can differ from the UTC date near midnight.
+    const created = new Date(pillow.body.item.createdAt);
+    const localDate = `${created.getFullYear()}-${String(created.getMonth() + 1).padStart(2, '0')}-${String(created.getDate()).padStart(2, '0')}`;
+    expect([created.toISOString().slice(0, 10), localDate]).toContain(pillow.body.item.purchaseDate);
 
     // Link a tag afterwards; the same tag can't be reused.
     const linked = await request(app).put(`/items/${pillow.body.item.id}/tag`).set(auth).send({ tagUid: '04B1C2D3E4F5A6' });
