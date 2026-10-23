@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinenTag Label Maker</title>
+<!-- Prototype of the product labels a manufacturer would print on LinenTag bedding (format v1,
+     see mobile/src/lib/product.ts). Open in a browser, then scan the codes from the screen or print them. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root { --bg: #F4F1EA; --card: #fff; --text: #1E2522; --muted: #69716D; --border: #E2DDD2; --accent: #2F6F62; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, -apple-system, Segoe UI, sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  h2 { margin: 0 0 12px; font-size: 17px; }
+  .muted { color: var(--muted); }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 16px 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  label.field { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+  input, select { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; background: #fff; color: var(--text); }
+  button { font: inherit; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .piece { display: grid; grid-template-columns: 2.2em 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .piece.with-tag { grid-template-columns: 2.2em 1fr 1fr auto; }
+  .piece .num { color: var(--muted); text-align: right; }
+  .check { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  .check input { width: auto; }
+  #labels { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .label { background: #fff; border: 1px dashed #bbb; border-radius: 10px; padding: 12px; text-align: center; break-inside: avoid; }
+  .label .qr { display: flex; justify-content: center; margin: 6px 0; }
+  .label b { display: block; font-size: 15px; }
+  .label small { color: #555; display: block; }
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    main { padding: 0; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="no-print">
+    <h1>LinenTag Label Maker</h1>
+    <p class="muted">Pick a set, then scan these labels in the app with <b>Add new bedding</b>.
+      Click <b>New pack</b> to make labels for another pack of the same set.</p>
+
+    <div class="panel">
+      <h2>1. The set</h2>
+      <div class="grid">
+        <div><label class="field" for="preset">Set type</label><select id="preset"></select></div>
+        <div><label class="field" for="size">Bed size</label>
+          <select id="size">
+            <option value="twin">Twin</option><option value="twin_xl">Twin XL</option><option value="full">Full</option>
+            <option value="queen">Queen</option><option value="king" selected>King</option><option value="cal_king">Cal King</option>
+          </select>
+        </div>
+        <div><label class="field" for="color">Colour</label>
+          <select id="color">
+            <option>White</option><option>Ivory</option><option>Grey</option><option>Charcoal</option><option>Navy</option>
+            <option>Blue</option><option>Sage</option><option>Blush</option><option>Black</option>
+          </select>
+        </div>
+        <div><label class="field" for="material">Material</label>
+          <select id="material">
+            <option>100% Cotton</option><option>Egyptian Cotton</option><option>Cotton Percale</option><option>Cotton Sateen</option>
+            <option>Linen</option><option>Bamboo</option><option>Microfiber</option><option>Flannel</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <div><label class="field" for="setName">Set name</label><input id="setName"></div>
+        <div><label class="field" for="pack">Pack code</label><input id="pack"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>2. The pieces</h2>
+      <div id="pieces"></div>
+      <div class="row" style="margin-top:4px">
+        <select id="addType" style="width:auto"></select>
+        <button id="addPiece">+ Add piece</button>
+        <label class="check" style="margin-left:auto"><input type="checkbox" id="withTags"> Print tag IDs on labels (as a factory would)</label>
+      </div>
+    </div>
+
+    <div class="row" style="margin-bottom:16px">
+      <button class="primary" id="newPack">New pack</button>
+      <button onclick="print()">Print labels</button>
+      <span class="muted" id="summary"></span>
+    </div>
+  </div>
+
+  <div id="labels"></div>
+</main>
+
+<script>
+  const TYPES = {
+    fitted_sheet: 'Fitted Sheet', flat_sheet: 'Flat Sheet', duvet_cover: 'Duvet Cover', pillowcase: 'Pillowcase',
+    comforter: 'Comforter', blanket: 'Blanket', mattress_protector: 'Mattress Protector',
+  };
+  const PRESETS = {
+    sheet4: { label: '4-piece sheet set', short: 'Sheet Set', pieces: ['fitted_sheet', 'flat_sheet', 'pillowcase', 'pillowcase'] },
+    bed5: { label: '5-piece bedding set', short: 'Bedding Set', pieces: ['fitted_sheet', 'flat_sheet', 'duvet_cover', 'pillowcase', 'pillowcase'] },
+    sheet6: { label: '6-piece sheet set', short: 'Sheet Set', pieces: ['fitted_sheet', 'flat_sheet', 'pillowcase', 'pillowcase', 'pillowcase', 'pillowcase'] },
+    bed7: { label: '7-piece bedding set', short: 'Bedding Set', pieces: ['fitted_sheet', 'flat_sheet', 'duvet_cover', 'pillowcase', 'pillowcase', 'pillowcase', 'pillowcase'] },
+    duvet3: { label: '3-piece duvet set', short: 'Duvet Set', pieces: ['duvet_cover', 'pillowcase', 'pillowcase'] },
+    custom: { label: 'Custom', short: 'Set', pieces: null },
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const randomHex = (bytes) => Array.from(crypto.getRandomValues(new Uint8Array(bytes)), (b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  const newTagId = () => '04' + randomHex(6);
+  const typeOptions = (selected) => Object.entries(TYPES).map(([v, l]) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${l}</option>`).join('');
+
+  /** Pieces in the current pack: [{ type, tagId }]. */
+  let pieces = [];
+  let nameEdited = false;
+
+  $('preset').innerHTML = Object.entries(PRESETS).map(([k, p]) => `<option value="${k}">${p.label}</option>`).join('');
+  $('preset').value = 'bed5';
+  $('addType').innerHTML = typeOptions('pillowcase');
+
+  /** "Pillowcase 1", "Pillowcase 2"… only when a type appears more than once. */
+  function pieceNames() {
+    const totals = {}, seen = {};
+    pieces.forEach((p) => (totals[p.type] = (totals[p.type] || 0) + 1));
+    return pieces.map((p) => {
+      seen[p.type] = (seen[p.type] || 0) + 1;
+      return totals[p.type] > 1 ? `${TYPES[p.type]} ${seen[p.type]}` : TYPES[p.type];
+    });
+  }
+
+  function autoSetName() {
+    if (nameEdited) return;
+    const preset = PRESETS[$('preset').value];
+    $('setName').value = `${$('color').value} ${$('size').selectedOptions[0].text} ${preset.short}`;
+  }
+
+  function loadPreset() {
+    const preset = PRESETS[$('preset').value];
+    if (preset.pieces) pieces = preset.pieces.map((type) => ({ type, tagId: newTagId() }));
+    autoSetName();
+    render();
+  }
+
+  function renderPieces() {
+    const withTags = $('withTags').checked;
+    const names = pieceNames();
+    $('pieces').innerHTML = '';
+    pieces.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'piece' + (withTags ? ' with-tag' : '');
+      row.innerHTML = `<span class="num">${i + 1}.</span>
+        <select aria-label="Piece ${i + 1}">${typeOptions(p.type)}</select>
+        ${withTags ? `<input aria-label="Tag ID for ${names[i]}" value="${p.tagId}">` : ''}
+        <button title="Remove ${names[i]}">✕</button>`;
+      row.querySelector('select').onchange = (e) => { p.type = e.target.value; $('preset').value = 'custom'; render(); };
+      if (withTags) row.querySelector('input').oninput = (e) => { p.tagId = e.target.value.trim(); renderLabels(); };
+      row.querySelector('button').onclick = () => { pieces.splice(i, 1); $('preset').value = 'custom'; render(); };
+      $('pieces').append(row);
+    });
+  }
+
+  function labelUrl(fields) {
+    const q = Object.entries(fields).filter(([, v]) => v !== '' && v != null).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+    return `https://linentag.app/p?${q}`;
+  }
+
+  function renderLabels() {
+    const names = pieceNames();
+    const sizeLabel = $('size').selectedOptions[0].text;
+    const out = $('labels');
+    out.innerHTML = '';
+    pieces.forEach((p, i) => {
+      const fields = {
+        lt: 1, n: names[i], t: p.type, s: $('size').value, m: $('material').value, c: $('color').value,
+        pk: $('pack').value.trim(), sn: $('setName').value.trim(), pc: pieces.length, i: i + 1,
+        u: $('withTags').checked ? p.tagId : '',
+      };
+      const div = document.createElement('div');
+      div.className = 'label';
+      div.innerHTML = `<b>${names[i]}</b><small>${fields.sn} · ${sizeLabel}</small><div class="qr"></div>
+        <small>Pack ${fields.pk} · piece ${i + 1} of ${pieces.length}</small>`;
+      out.append(div);
+      new QRCode(div.querySelector('.qr'), { text: labelUrl(fields), width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M });
+    });
+    $('summary').textContent = `${pieces.length} labels · pack ${$('pack').value}`;
+  }
+
+  function render() { renderPieces(); renderLabels(); }
+
+  $('preset').onchange = loadPreset;
+  for (const id of ['size', 'color']) $(id).onchange = () => { autoSetName(); renderLabels(); };
+  $('material').onchange = renderLabels;
+  $('setName').oninput = () => { nameEdited = $('setName').value.trim() !== ''; renderLabels(); };
+  $('pack').oninput = renderLabels;
+  $('withTags').onchange = render;
+  $('addPiece').onclick = () => { pieces.push({ type: $('addType').value, tagId: newTagId() }); $('preset').value = 'custom'; render(); };
+  $('newPack').onclick = () => {
+    $('pack').value = 'LT-' + randomHex(4);
+    pieces.forEach((p) => (p.tagId = newTagId()));
+    render();
+  };
+
+  $('pack').value = 'LT-' + randomHex(4);
+  loadPreset();
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinenTag NFC Tags</title>
+<meta name="description" content="Sew-in NFC tags that make any sheet, pillowcase or duvet cover tappable with your phone.">
+<style>
+  :root { --bg: #FAF8F5; --card: #fff; --text: #1F2937; --muted: #6B7280; --border: #ECE7DF; --accent: #556B5D; --accent-soft: #D9E7DD; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.55 system-ui, -apple-system, Segoe UI, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  a { color: var(--accent); }
+  h1 { font-size: 36px; line-height: 1.15; margin: 16px 0 6px; letter-spacing: -0.3px; }
+  h2 { font-size: 21px; margin: 0 0 10px; }
+  .lead { font-size: 19px; color: var(--muted); margin: 0 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin: 14px 0; }
+  .benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .benefit { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .benefit b { display: block; margin-bottom: 2px; }
+  .benefit span { color: var(--muted); font-size: 15px; }
+  .cta { background: var(--accent-soft); border-color: var(--accent); }
+  a.btn { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; }
+  ol li { margin-bottom: 8px; }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <a href="/">← LinenTag</a>
+  <h1>Sew-in NFC tags</h1>
+  <p class="lead">Turn the bedding you already own into LinenTag bedding. Sew a tag into each piece, then just tap it with your phone.</p>
+
+  <div class="benefits">
+    <div class="benefit"><b>Tap, don't aim</b><span>Hold your phone to the sheet. No camera, light or angle needed.</span></div>
+    <div class="benefit"><b>Made for the wash</b><span>Sealed capsules survive hot washes and the dryer, where printed labels fade.</span></div>
+    <div class="benefit"><b>Invisible</b><span>Sewn into a seam or hem, so nothing shows on the bed.</span></div>
+    <div class="benefit"><b>Nothing to redo</b><span>Your sets, rooms and wash counts carry over. Old printed labels keep working as a backup.</span></div>
+  </div>
+
+  <div class="card cta" id="buy">
+    <h2>Get your tags</h2>
+    <p id="buy-text">NFC tag kits are coming soon. In the meantime, <a href="/labels">print labels</a> for your bedding. Upgrading later takes a few minutes.</p>
+  </div>
+
+  <div class="card">
+    <h2>Upgrading from printed labels</h2>
+    <ol>
+      <li>Sew one tag into a seam or hem of each piece.</li>
+      <li>In the LinenTag app, open <b>Settings → NFC tags → Upgrade my bedding</b>.</li>
+      <li>Scan a piece's printed label, then tap its new tag with your phone. Move on to the next piece; no menus in between.</li>
+    </ol>
+    <p class="muted">New to LinenTag? Sew in the tags, then in the app tap <b>Add new bedding</b>, or open any item and tap <b>Link a tag</b>.</p>
+  </div>
+</main>
+<script>
+  // Set this to the store page when the kit goes on sale.
+  const SHOP_URL = '';
+  if (SHOP_URL) {
+    document.getElementById('buy-text').innerHTML = `<a class="btn" href="${SHOP_URL}">Buy NFC tags</a>`;
+  }
+</script>
+</body>
+</html>

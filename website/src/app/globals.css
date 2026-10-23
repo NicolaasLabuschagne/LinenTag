@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+
+  /* Brand: soft sage */
+  --color-brand-50: #eef4ef;
+  --color-brand-100: #d9e7dd; /* light sage: surfaces */
+  --color-brand-200: #c3d6c8;
+  --color-brand-400: #8fa696; /* decorative only */
+  --color-brand-600: #556b5d; /* primary: white text on it is 5.8:1 */
+  --color-brand-700: #3f5246; /* sage deep: text on light sage, hover */
+  --color-brand-900: #2e3b33;
+  /* Accent: muted gold. 500 is for fills (dark text on it); text uses 700. */
+  --color-accent-50: #f6eedd;
+  --color-accent-100: #efe2c6;
+  --color-accent-400: #cfae6c;
+  --color-accent-500: #b68d40;
+  --color-accent-700: #8a6a2c; /* 5:1 on white */
+
+  /* Neutrals */
+  --color-ink: #1f2937;
+  --color-body: #4b5563;
+  --color-muted: #6b7280;
+  --color-line: #ece7df;
+  --color-surface: #ffffff;
+  --color-canvas: #faf8f5;
+
+  --radius-card: 1.25rem;
+
+  --animate-ripple: ripple 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  /* CSS-only entrance for above-the-fold content: visible in the HTML, no wait for JavaScript. */
+  --animate-enter: enter 0.7s cubic-bezier(0.21, 0.6, 0.35, 1) both;
+
+  @keyframes enter {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes ripple {
+    0% { transform: scale(0.6); opacity: 0.55; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+}
+
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-canvas text-body antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1, h2, h3, h4 {
+    @apply text-ink tracking-tight;
+  }
+  /* Display serif for page and section headings; card titles (h3) stay in Inter. */
+  h1, h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-600;
+  }
+  ::selection {
+    @apply bg-brand-100 text-brand-900;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+  .eyebrow {
+    @apply text-sm font-semibold uppercase tracking-[0.14em] text-accent-700;
+  }
+  /* Emphasised words in headings: sage italic, no gradient. */
+  .gradient-text {
+    @apply italic text-brand-600;
+  }
+  .prose-page {
+    @apply max-w-3xl text-[1.0625rem] leading-relaxed text-body;
+  }
+  .prose-page h2 {
+    @apply mt-12 mb-4 text-2xl font-semibold;
+  }
+  .prose-page h3 {
+    @apply mt-8 mb-3 text-xl font-semibold;
+  }
+  .prose-page p,
+  .prose-page ul,
+  .prose-page ol {
+    @apply mb-5;
+  }
+  .prose-page ul {
+    @apply list-disc pl-6;
+  }
+  .prose-page ol {
+    @apply list-decimal pl-6;
+  }
+  .prose-page li {
+    @apply mb-2;
+  }
+  .prose-page a {
+    @apply font-medium text-brand-700 underline underline-offset-4 hover:text-ink;
+  }
+  .prose-page strong {
+    @apply font-semibold text-ink;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
